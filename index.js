@@ -60,10 +60,9 @@ client.on('message', message => {
                 // instead of a catch() block so that we don't swallow
                 // exceptions from actual bugs in components.
                 (error) => {
-                    this.setState({
-                        isLoaded: true,
-                        error
-                    });
+                    message.channel.send("There was a server problem, please contact the authors");
+                    console.log("There was an error getting the winrate");
+                    console.log(error);
                 }
             )
     }
