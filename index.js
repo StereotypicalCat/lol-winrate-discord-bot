@@ -53,7 +53,7 @@ client.on('message', message => {
                         return
                     }
 
-                    message.channel.send(`${user1}'s winrate with ${user2} is ${result.wins/totalGames}.`)
+                    message.channel.send(`${user1}'s winrate with ${user2} is ${(result.wins/totalGames) * 100}%.`)
                     lastCall = new Date();
                 },
                 // Note: it's important to handle errors here
