@@ -33,8 +33,8 @@ client.on('message', message => {
             message.channel.send('Wrong number of arguments. You need to do !winrate username1 username2');
             return;
         }
-        if (Date.now() - lastCall < cooldown){
-            message.channel.send('While developing this application, we need to enforce strict rate limits of 1 winrate request per 5 minutes. A new request is ready in ' + ((Date.now() - lastCall)/1000) + " seconds");
+        if ((Date.now() - lastCall) < cooldown){
+            message.channel.send('While developing this application, we need to enforce strict rate limits of 1 winrate request per 5 minutes. A new request is ready in ' + ((cooldown -(Date.now() - lastCall))/1000) + " seconds");
             return;
         }
 
@@ -53,7 +53,7 @@ client.on('message', message => {
                         return
                     }
 
-                    message.channel.send(`${user1}'s winrate with ${user2} is ${(result.wins/totalGames) * 100}%.`)
+                    message.channel.send(`${user1}'s winrate with ${user2} is ${(result.wins/totalGames) * 100}% based on their recent ${totalGames} games.`)
                     lastCall = new Date();
                 },
                 // Note: it's important to handle errors here
