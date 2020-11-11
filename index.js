@@ -1,6 +1,7 @@
 const Discord = require('discord.js');
 const fs = require('fs');
 const readline = require('readline');
+const fetch = require("node-fetch");
 
 const rl = readline.createInterface({
     input: process.stdin,
