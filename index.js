@@ -26,7 +26,7 @@ let cooldown = 5 * 60 * 1000;
 let lastCall = Date.now() - cooldown;
 
 client.on('message', message => {
-    if (message.content === '!winrate') {
+    if (message.content.startsWith('!winrate')) {
         let winrateArguments = message.content.split(' ');
         if (winrateArguments.length !== 3){
             message.channel.send('Wrong number of arguments. You need to do !winrate username1 username2');
