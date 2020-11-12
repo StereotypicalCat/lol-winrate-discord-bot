@@ -1,7 +1,7 @@
 const Discord = require('discord.js');
 const fs = require('fs');
 const readline = require('readline');
-const fetch = require("node-fetch");
+const axios = require('axios');
 
 const rl = readline.createInterface({
     input: process.stdin,
@@ -28,75 +28,73 @@ let lastCall = Date.now() - cooldown;
 
 client.on('message', message => {
     if (message.content.startsWith('!winrate')) {
-        let winrateArguments = message.content.split(' ');
-        if (winrateArguments.length !== 3){
-            message.channel.send('Wrong number of arguments. You need to do !winrate username1 username2');
-            return;
-        }
-        if ((Date.now() - lastCall) < cooldown){
-            message.channel.send('While developing this application, we need to enforce strict rate limits of 1 winrate request per 5 minutes. A new request is ready in ' + ((cooldown -(Date.now() - lastCall))/1000) + " seconds");
+        let winrateArguments = message.content.split('"');
+
+        if (winrateArguments.length !== 5) {
+            message.channel.send('Wrong number of arguments. You need to do !winrate "username1" "username2"');
             return;
         }
 
-        let user1 = winrateArguments[1];
-        let user2 = winrateArguments[2];
+        if ((Date.now() - lastCall) < cooldown) {
+            message.channel.send('While developing this application, we need to enforce strict rate limits of 1 winrate request per 5 minutes. A new request is ready in ' + ((cooldown - (Date.now() - lastCall)) / 1000) + " seconds");
+            return;
+        }
 
-        fetch(`https://winrateapi.lucaswinther.info/api/WinRate?User1=${user1}&User2=${user2}`)
-            .then(res => res.json())
-            .then(
-                (result) => {
+        const user1 = winrateArguments[1];
+        const user2 = winrateArguments[3];
 
-                    let totalGames = result.wins + result.losses;
+        const requestUrl = `https://winrateapi.lucaswinther.info/api/WinRate`;
 
-                    if (totalGames == 0){
-                        message.channel.send(`${user1} does not have any recent games with ${user2}`)
-                        return
-                    }
+        axios.get(requestUrl, {
+            params: {
+                User1: user1,
+                User2: user2
+            }
+        }).then(function (result) {
+            console.log(result.data);
+            let totalGames = result.data.wins + result.data.losses;
 
-                    message.channel.send(`${user1}'s winrate with ${user2} is ${(result.wins/totalGames) * 100}% based on their recent ${totalGames} games.`)
-                    lastCall = new Date();
-                },
-                // Note: it's important to handle errors here
-                // instead of a catch() block so that we don't swallow
-                // exceptions from actual bugs in components.
-                (error) => {
-                    message.channel.send("There was a server problem, please contact the authors");
-                    console.log("There was an error getting the winrate");
-                    console.log(error);
-                }
-            )
+            if (totalGames == 0){
+                message.channel.send(`${user1} does not have any recent games with ${user2}`)
+                return
+            }
+
+            message.channel.send(`${user1}'s winrate with ${user2} is ${((result.data.wins/totalGames) * 100).toFixed(2)}% based on their recent ${totalGames} games.`)
+            lastCall = new Date();
+        }).catch(function (error) {
+            message.channel.send("There was a server problem, please contact the authors");
+            console.log("There was an error getting the winrate");
+            console.log(error);
+        }).then(function () {
+                // always executed
+            });
     }
-
-
 });
 
 // Try and login with data from last time if no arguments was specified.
 let key;
 
-if (arguments.length === 0){
-    try{
+if (arguments.length === 0) {
+    try {
         data = fs.readFileSync('./key.txt', "utf-8");
         console.log("Key file read...")
         try {
             console.dir(data);
-            if (data === ""){
+            if (data === "") {
                 rl.question("Key was not specified, please enter manually: ", answer => {
                     key = answer;
                 });
             }
             console.log("Key successfully loaded from save");
             key = data;
-        }
-        catch (err) {
+        } catch (err) {
             console.log('Error loading last saved key, or key does not exist.')
             console.log(err);
         }
-    }
-    catch{
+    } catch {
         console.log("No previous save data was found.")
     }
-}
-else{
+} else {
     key = arguments[0];
     fs.writeFile('./key.txt', key, function (err) {
         if (err) {
