@@ -1,12 +1,5 @@
 const Discord = require('discord.js');
-const fs = require('fs');
-const readline = require('readline');
 const axios = require('axios');
-
-const rl = readline.createInterface({
-    input: process.stdin,
-    output: process.stdout
-});
 
 // Get arguments
 let arguments = process.argv.slice(2);
@@ -27,11 +20,11 @@ let cooldown = 5 * 60 * 1000;
 let lastCall = Date.now() - cooldown;
 
 client.on('message', message => {
-    if (message.content.startsWith('!winrate')) {
+    if (message.content.startsWith('!winrate') || message.content.startsWith("!wr")) {
         let winrateArguments = message.content.split('"');
 
         if (winrateArguments.length !== 5) {
-            message.channel.send('Wrong number of arguments. You need to do !winrate "username1" "username2"');
+            message.channel.send('Wrong number of arguments. You need to do !wr "username1" "username2"');
             return;
         }
 
@@ -62,7 +55,7 @@ client.on('message', message => {
             message.channel.send(`${user1}'s winrate with ${user2} is ${((result.data.wins/totalGames) * 100).toFixed(2)}% based on their recent ${totalGames} games.`)
             lastCall = new Date();
         }).catch(function (error) {
-            message.channel.send("There was a server problem, please contact the authors");
+            message.channel.send("There was a server problem, please try again later");
             console.log("There was an error getting the winrate");
             console.log(error);
         }).then(function () {
@@ -71,39 +64,14 @@ client.on('message', message => {
     }
 });
 
-// Try and login with data from last time if no arguments was specified.
+// Read auth key from environment variables.
 let key;
-
-if (arguments.length === 0) {
-    try {
-        data = fs.readFileSync('./key.txt', "utf-8");
-        console.log("Key file read...")
-        try {
-            console.dir(data);
-            if (data === "") {
-                rl.question("Key was not specified, please enter manually: ", answer => {
-                    key = answer;
-                });
-            }
-            console.log("Key successfully loaded from save");
-            key = data;
-        } catch (err) {
-            console.log('Error loading last saved key, or key does not exist.')
-            console.log(err);
-        }
-    } catch {
-        console.log("No previous save data was found.")
-    }
-} else {
-    key = arguments[0];
-    fs.writeFile('./key.txt', key, function (err) {
-        if (err) {
-            console.log('There has been an error saving your configuration data.');
-            console.log(err.message);
-            return;
-        }
-        console.log('Key saved successfully.')
-    });
+if (process.env.apikey == null){
+    console.log("Please specify an API key in your environment variables.");
+    process.exit(1);
+}
+else{
+    key = process.env.apikey;
 }
 
 // login to Discord with your app's token
