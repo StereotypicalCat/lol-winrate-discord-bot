@@ -14,55 +14,119 @@ client.once('ready', () => {
     console.log('Ready!');
 });
 
-// 5 minutes
+let easterEggs = {
+    "Joe": "Joe Mama",
+    "Ligma": "Ligma Balls"
+}
 
-let cooldown = 5 * 60 * 1000;
+// 10 seconds
+let cooldown = 10 * 1000;
 let lastCall = Date.now() - cooldown;
 
 client.on('message', message => {
     if (message.content.startsWith('!winrate') || message.content.startsWith("!wr")) {
         let winrateArguments = message.content.split('"');
 
-        if (winrateArguments.length !== 5) {
-            message.channel.send('Wrong number of arguments. You need to do !wr "username1" "username2"');
+        let validNoOfArgs = [3, 5, 7, 9, 11]
+
+        if (!validNoOfArgs.includes(winrateArguments.length)) {
+            message.channel.send('Wrong number of arguments. You need to do !wr "username1" "username2" ...');
             return;
         }
 
         if ((Date.now() - lastCall) < cooldown) {
-            message.channel.send('While developing this application, we need to enforce strict rate limits of 1 winrate request per 5 minutes. A new request is ready in ' + ((cooldown - (Date.now() - lastCall)) / 1000) + " seconds");
+            message.channel.send(`While developing this application, we need to enforce strict rate limits of 1 winrate request per ${cooldown/1000} seconds. A new request is ready in ` + ((cooldown - (Date.now() - lastCall)) / 1000) + " seconds");
             return;
         }
 
-        const user1 = winrateArguments[1];
-        const user2 = winrateArguments[3];
 
-        const requestUrl = `http://winrateapi.lucaswinther.info/api/WinRate/GetWinrateTogether/2`;
 
-        axios.get(requestUrl, {
-            params: {
-                User1: user1,
-                User2: user2
-            }
-        }).then(function (result) {
-            console.log(result.data);
-            let totalGames = result.data.wins + result.data.losses;
+        let isEasterEggs = Object.keys(easterEggs).includes(winrateArguments[1]);
+        if (isEasterEggs){
+            sendEasterEggAnswer(message, winrateArguments[1])
+        }
+        else{
+            sendRealAnswer(message, winrateArguments);
+        }
 
-            if (totalGames == 0){
-                message.channel.send(`${user1} does not have any recent games with ${user2}`)
-                return
-            }
 
-            message.channel.send(`${user1}'s winrate with ${user2} is ${((result.data.wins/totalGames) * 100).toFixed(2)}% based on their recent ${totalGames} games.`)
-            lastCall = new Date();
-        }).catch(function (error) {
-            message.channel.send("There was a server problem, please try again later");
-            console.log("There was an error getting the winrate");
-            console.log(error);
-        }).then(function () {
-                // always executed
-            });
+
+
     }
 });
+
+let sendEasterEggAnswer = (message, easterEggMessage) => {
+    message.channel.send(easterEggs[easterEggMessage]);
+}
+let sendRealAnswer = (message, winrateArguments) => {
+
+    let total = 0;
+    let parameters = {}
+
+    switch (winrateArguments.length) {
+        case 3:
+            total = 1;
+            parameters = {
+                user1: winrateArguments[1]
+            }
+            break
+        case 5:
+            total = 2;
+            parameters = {
+                user1: winrateArguments[1],
+                user2: winrateArguments[3]
+            }
+            break
+        case 7:
+            total = 3;
+            parameters = {
+                user1: winrateArguments[1],
+                user2: winrateArguments[3],
+                user3: winrateArguments[5]
+            }
+            break;
+        case 9:
+            total = 4;
+            parameters = {
+                user1: winrateArguments[1],
+                user2: winrateArguments[3],
+                user3: winrateArguments[5],
+                user4: winrateArguments[7]
+            }
+        case 11:
+            total = 5;
+            parameters = {
+                user1: winrateArguments[1],
+                user2: winrateArguments[3],
+                user3: winrateArguments[5],
+                user4: winrateArguments[7],
+                user5: winrateArguments[9]
+            }
+    }
+
+    const requestUrl = `http://winrateapi.lucaswinther.info/api/WinRate/GetWinrateTogether/${total}`;
+
+    axios.get(requestUrl, {
+        params: parameters
+    }).then(function (result) {
+        console.log(result.data);
+        let totalGames = result.data.wins + result.data.losses;
+
+        if (totalGames == 0){
+            message.channel.send(`${parameters.user1} does not have any recent games with ${parameters.user2}`)
+            return
+        }
+
+        message.channel.send(`${parameters.user1}'s winrate with ${parameters.user2} and more is ${((result.data.wins/totalGames) * 100).toFixed(2)}% based on their recent ${totalGames} games.`)
+        lastCall = new Date();
+    }).catch(function (error) {
+        message.channel.send("There was a server problem, please try again later");
+        console.log("There was an error getting the winrate");
+        console.log(error);
+    }).then(function () {
+        // always executed
+    });
+}
 
 // Read auth key from environment variables.
 let key;
