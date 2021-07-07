@@ -36,7 +36,7 @@ client.on('message', message => {
         const user1 = winrateArguments[1];
         const user2 = winrateArguments[3];
 
-        const requestUrl = `https://winrateapi.lucaswinther.info/api/WinRate`;
+        const requestUrl = `http://winrateapi.lucaswinther.info/api/WinRate/GetWinrateTogether/2`;
 
         axios.get(requestUrl, {
             params: {
