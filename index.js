@@ -39,8 +39,6 @@ client.on('message', message => {
             return;
         }
 
-
-
         let isEasterEggs = Object.keys(easterEggs).includes(winrateArguments[1]);
         if (isEasterEggs){
             sendEasterEggAnswer(message, winrateArguments[1])
@@ -48,9 +46,6 @@ client.on('message', message => {
         else{
             sendRealAnswer(message, winrateArguments);
         }
-
-
-
 
     }
 });
@@ -93,6 +88,7 @@ let sendRealAnswer = (message, winrateArguments) => {
                 user3: winrateArguments[5],
                 user4: winrateArguments[7]
             }
+            break;
         case 11:
             total = 5;
             parameters = {
@@ -112,15 +108,23 @@ let sendRealAnswer = (message, winrateArguments) => {
         console.log(result.data);
         let totalGames = result.data.wins + result.data.losses;
 
-        if (totalGames == 0){
-            message.channel.send(`${parameters.user1} does not have any recent games with ${parameters.user2}`)
+        if (totalGames === 0){
+            message.channel.send(`The specified user(s) do not have any recent games together.`)
             return
         }
 
-        message.channel.send(`${parameters.user1}'s winrate with ${parameters.user2} and more is ${((result.data.wins/totalGames) * 100).toFixed(2)}% based on their recent ${totalGames} games.`)
+        if (parameters.user2 !== undefined){
+            message.channel.send(`The winrate of ${parameters.user1}, ${parameters.user2}${parameters.user3 !== undefined ? `, ${parameters.user3}` : ""}${parameters.user4 !== undefined ? `, ${parameters.user4}` : ""}${parameters.user5 !== undefined ? `, ${parameters.user5}` : ""} is ${((result.data.wins/totalGames) * 100).toFixed(2)}% based on their recent ${totalGames} ${totalGames > 1 ? "games" : "game"} together.`)
+        }
+        else{
+            message.channel.send(`The winrate of ${parameters.user1} is ${((result.data.wins/totalGames) * 100).toFixed(2)}% based on their recent ${totalGames} games.`)
+        }
+
+
+
         lastCall = new Date();
     }).catch(function (error) {
-        message.channel.send("There was a server problem, please try again later");
+        message.channel.send("A username wasn't found, or there was a server problem, please try again later");
         console.log("There was an error getting the winrate");
         console.log(error);
     }).then(function () {
