@@ -25,12 +25,13 @@ let lastCall = Date.now() - cooldown;
 
 client.on('message', message => {
     if (message.content.startsWith('!winrate') || message.content.startsWith("!wr")) {
-        let winrateArguments = message.content.split('"');
 
-        let validNoOfArgs = [3, 5, 7, 9, 11]
+        let users = parseUsers(message.content);
 
-        if (!validNoOfArgs.includes(winrateArguments.length)) {
-            message.channel.send('Wrong number of arguments. You need to do !wr "username1" "username2" ...');
+        let validNoOfUsers = [1, 2, 3, 4, 5]
+
+        if (!validNoOfUsers.includes(users.length)) {
+            message.channel.send('Wrong number of arguments. You need to do !wr username1 username2 "user name 3" ...');
             return;
         }
 
@@ -39,68 +40,100 @@ client.on('message', message => {
             return;
         }
 
-        let isEasterEggs = Object.keys(easterEggs).includes(winrateArguments[1]);
+        let isEasterEggs = Object.keys(easterEggs).includes(users[0]);
         if (isEasterEggs){
-            sendEasterEggAnswer(message, winrateArguments[1])
+            sendEasterEggAnswer(message, users[0])
         }
         else{
-            sendRealAnswer(message, winrateArguments);
+            sendRealAnswer(message, users);
         }
 
     }
 });
 
+
+let parseUsers = (messageContent) => {
+    let users = [];
+
+    let i = 1;
+
+    while (i < messageContent.length && i !== 0){
+        let char = messageContent[i];
+
+        let isSpace = char === ' ';
+        if (isSpace){
+            let nextIsSemicolon = messageContent[i+1] === '"';
+            if (nextIsSemicolon){
+                i = i + 1;
+                let endIndex = messageContent.indexOf('"', i + 1);
+                users.push(messageContent.slice(i+1, endIndex));
+                i = endIndex + 1;
+            }
+            else{
+                let endIndex = messageContent.indexOf(' ', i+1)
+                users.push(messageContent.slice(i+1, endIndex === -1 ? messageContent.length : endIndex))
+                i = endIndex;
+            }
+        }
+        else{
+            i = i + 1;
+        }
+
+    }
+
+    console.log(users);
+
+    return users;
+}
+
+
 let sendEasterEggAnswer = (message, easterEggMessage) => {
     message.channel.send(easterEggs[easterEggMessage]);
 }
-let sendRealAnswer = (message, winrateArguments) => {
+let sendRealAnswer = (message, users) => {
 
-    let total = 0;
     let parameters = {}
 
-    switch (winrateArguments.length) {
+    switch (users.length) {
+        case 1:
+            parameters = {
+                user1: users[0]
+            }
+            break;
+        case 2:
+            parameters = {
+                user1: users[0],
+                user2: users[1]
+            }
+            break;
         case 3:
-            total = 1;
             parameters = {
-                user1: winrateArguments[1]
+                user1: users[0],
+                user2: users[1],
+                user3: users[2]
             }
-            break
+            break;
+        case 4:
+            parameters = {
+                user1: users[0],
+                user2: users[1],
+                user3: users[2],
+                user4: users[3]
+            }
+            break;
         case 5:
-            total = 2;
             parameters = {
-                user1: winrateArguments[1],
-                user2: winrateArguments[3]
-            }
-            break
-        case 7:
-            total = 3;
-            parameters = {
-                user1: winrateArguments[1],
-                user2: winrateArguments[3],
-                user3: winrateArguments[5]
+                user1: users[0],
+                user2: users[1],
+                user3: users[2],
+                user4: users[3],
+                user5: users[4]
             }
             break;
-        case 9:
-            total = 4;
-            parameters = {
-                user1: winrateArguments[1],
-                user2: winrateArguments[3],
-                user3: winrateArguments[5],
-                user4: winrateArguments[7]
-            }
-            break;
-        case 11:
-            total = 5;
-            parameters = {
-                user1: winrateArguments[1],
-                user2: winrateArguments[3],
-                user3: winrateArguments[5],
-                user4: winrateArguments[7],
-                user5: winrateArguments[9]
-            }
+
     }
 
-    const requestUrl = `http://winrateapi.lucaswinther.info/api/WinRate/GetWinrateTogether/${total}`;
+    const requestUrl = `http://winrateapi.lucaswinther.info/api/WinRate/GetWinrateTogether/${users.length}`;
 
     axios.get(requestUrl, {
         params: parameters
