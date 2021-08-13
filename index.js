@@ -133,7 +133,7 @@ let sendRealAnswer = (message, users) => {
 
     }
 
-    const requestUrl = `http://winrateapi.lucaswinther.info/api/WinRate/GetWinrateTogether/${users.length}`;
+    const requestUrl = `https://winrateapi.lucaswinther.info/api/WinRate/GetWinrateTogether/${users.length}`;
 
     axios.get(requestUrl, {
         params: parameters
