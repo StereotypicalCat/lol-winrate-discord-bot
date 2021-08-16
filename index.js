@@ -26,7 +26,16 @@ let lastCall = Date.now() - cooldown;
 client.on('message', message => {
     if (message.content.startsWith('!winrate') || message.content.startsWith("!wr")) {
 
-        let users = parseUsers(message.content);
+        let messageContent = message.content;
+
+        let noOfGames = parseNoOfGames(messageContent);
+
+        if (noOfGames !== -1){
+            let indexOfNoOfGames = messageContent.indexOf(noOfGames.toString(), 0);
+            messageContent = messageContent.replace(noOfGames.toString() + " ", "");
+        }
+
+        let users = parseUsers(messageContent);
 
         let validNoOfUsers = [1, 2, 3, 4, 5]
 
@@ -45,12 +54,32 @@ client.on('message', message => {
             sendEasterEggAnswer(message, users[0])
         }
         else{
-            sendRealAnswer(message, users);
+            sendRealAnswer(message, users, noOfGames);
         }
 
     }
 });
 
+/*
+* returns a number between 1 and 60, or -1 if invalid input
+* */
+let parseNoOfGames = (messageContent) => {
+    let noOfGames = -1;
+
+    let maybeNoOfGames = messageContent.split(' ')
+
+    let value = maybeNoOfGames[1]
+    // Better parse int
+    if (/^[-+]?(\d+|Infinity)$/.test(value)) {
+        noOfGames = Number(value)
+    }
+
+    if (noOfGames > 60 || noOfGames < 0){
+        noOfGames = -1;
+    }
+
+    return noOfGames
+}
 
 let parseUsers = (messageContent) => {
     let users = [];
@@ -90,10 +119,12 @@ let parseUsers = (messageContent) => {
 let sendEasterEggAnswer = (message, easterEggMessage) => {
     message.channel.send(easterEggs[easterEggMessage]);
 }
-let sendRealAnswer = (message, users) => {
+
+let sendRealAnswer = (message, users, noOfGames) => {
 
     let parameters = {}
 
+    // Adds the users
     switch (users.length) {
         case 1:
             parameters = {
@@ -131,6 +162,10 @@ let sendRealAnswer = (message, users) => {
             }
             break;
 
+    }
+
+    if (noOfGames != -1){
+        parameters.NoMatches = noOfGames;
     }
 
     const requestUrl = `https://winrateapi.lucaswinther.info/api/WinRate/GetWinrateTogether/${users.length}`;
