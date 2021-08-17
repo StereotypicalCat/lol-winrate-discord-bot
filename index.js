@@ -28,12 +28,10 @@ client.on('message', message => {
 
         let messageContent = message.content;
 
-        let noOfGames = parseNoOfGames(messageContent);
+        messageContent = removePrefix(messageContent);
 
-        if (noOfGames !== -1){
-            let indexOfNoOfGames = messageContent.indexOf(noOfGames.toString(), 0);
-            messageContent = messageContent.replace(noOfGames.toString() + " ", "");
-        }
+        let options = parseOptions(messageContent);
+        messageContent = options.newMessageContent;
 
         let users = parseUsers(messageContent);
 
@@ -54,37 +52,80 @@ client.on('message', message => {
             sendEasterEggAnswer(message, users[0])
         }
         else{
-            sendRealAnswer(message, users, noOfGames);
+            return;
+            sendRealAnswer(message, users, options);
         }
 
     }
 });
 
 /*
-* returns a number between 1 and 60, or -1 if invalid input
+* Removes the prefix !wr or !winrate from the string.
 * */
-let parseNoOfGames = (messageContent) => {
-    let noOfGames = -1;
+let removePrefix = (messageContent) => {
 
-    let maybeNoOfGames = messageContent.split(' ')
+    let endOfPrefix = messageContent.indexOf(' ');
+    let newMessageContent = messageContent.slice(endOfPrefix + 1, messageContent.length);
 
-    let value = maybeNoOfGames[1]
-    // Better parse int
-    if (/^[-+]?(\d+|Infinity)$/.test(value)) {
-        noOfGames = Number(value)
+    console.log(newMessageContent);
+
+    return newMessageContent;
+}
+
+let parseNumber = (text) => {
+
+    let number = -1;
+
+    if (/^[-+]?(\d+|Infinity)$/.test(text)) {
+        number = Number(text)
     }
 
-    if (noOfGames > 60 || noOfGames < 0){
-        noOfGames = -1;
+    return number;
+}
+
+let parseOptions = (messageContent) => {
+
+    let options = {};
+
+    let messageContentSplit = messageContent.split(' ');
+    let i = 0;
+    let shouldExit = false;
+    while (!shouldExit) {
+        if (messageContentSplit[i].startsWith("--")) {
+            switch (messageContentSplit[i].replace('--', '')) {
+                case "type":
+                    options.type = messageContentSplit[i + 1];
+                case "matches":
+                    options.matches = parseNumber(messageContentSplit[i + 1]);
+            }
+            i += 2;
+        } else {
+            shouldExit = true;
+        }
+    }
+    let newMessageContent;
+
+    if (i != 0){
+        // Starts at the end of the final parameter + 1 space
+        //console.log(messageContent.indexOf(messageContentSplit[i-2] + " " + messageContentSplit[i-1]));
+        //let indexUsersStartAt = messageContent.indexOf(messageContentSplit[i-2] + " " + messageContentSplit[i-1]) + messageContentSplit[i-2].length + messageContentSplit[i-2].length + 2;
+
+        // For now, just start at the index of what the first username is
+        let indexUsersStartAt = messageContent.indexOf(messageContentSplit[i]);
+        newMessageContent = messageContent.slice(indexUsersStartAt, messageContent.length)
+    } else{
+        newMessageContent = messageContent;
     }
 
-    return noOfGames
+    options.newMessageContent = newMessageContent;
+
+    return options;
 }
 
 let parseUsers = (messageContent) => {
     let users = [];
 
-    let i = 1;
+    let i = 0;
 
     while (i < messageContent.length && i !== 0){
         let char = messageContent[i];
@@ -110,6 +151,7 @@ let parseUsers = (messageContent) => {
 
     }
 
+    console.log("Here are the users: ");
     console.log(users);
 
     return users;
@@ -120,7 +162,7 @@ let sendEasterEggAnswer = (message, easterEggMessage) => {
     message.channel.send(easterEggs[easterEggMessage]);
 }
 
-let sendRealAnswer = (message, users, noOfGames) => {
+let sendRealAnswer = (message, users, options) => {
 
     let parameters = {}
 
@@ -164,8 +206,17 @@ let sendRealAnswer = (message, users, noOfGames) => {
 
     }
 
-    if (noOfGames != -1){
-        parameters.NoMatches = noOfGames;
+    // Adds the options
+    switch (options.entries) {
+        case "type":
+            // Bad input is handled on API
+            parameters.MatchSelector = options["type"];
+            break;
+        case "matches":
+            let matchesIsValid = options["matches"] >= 1 || options["matches"] <= 60;
+            if (matchesIsValid){
+                parameters.NoMatches = options["matches"];
+            }
     }
 
     const requestUrl = `https://winrateapi.lucaswinther.info/api/WinRate/GetWinrateTogether/${users.length}`;
