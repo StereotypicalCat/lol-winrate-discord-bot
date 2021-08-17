@@ -110,9 +110,9 @@ let parseOptions = (messageContent) => {
         //console.log(messageContent.indexOf(messageContentSplit[i-2] + " " + messageContentSplit[i-1]));
         //let indexUsersStartAt = messageContent.indexOf(messageContentSplit[i-2] + " " + messageContentSplit[i-1]) + messageContentSplit[i-2].length + messageContentSplit[i-2].length + 2;
 
-        // For now, just start at the index of what the first username is
+        // For now, just start at the index of what the first username is (include the starting ' ')
         let indexUsersStartAt = messageContent.indexOf(messageContentSplit[i]);
-        newMessageContent = messageContent.slice(indexUsersStartAt, messageContent.length)
+        newMessageContent = messageContent.slice(indexUsersStartAt - 1, messageContent.length)
     } else{
         newMessageContent = messageContent;
     }
@@ -122,12 +122,17 @@ let parseOptions = (messageContent) => {
     return options;
 }
 
+
+/*
+ *
+ *  TODO: Fix infinite loop if end character is a "
+ */
 let parseUsers = (messageContent) => {
     let users = [];
 
     let i = 0;
 
-    while (i < messageContent.length && i !== 0){
+    while (i < messageContent.length && i !== -1){
         let char = messageContent[i];
 
         let isSpace = char === ' ';
@@ -146,7 +151,11 @@ let parseUsers = (messageContent) => {
             }
         }
         else{
-            i = i + 1;
+            if (i == 0){
+                i = -1;
+            }else{
+                i = i + 1;
+            }
         }
 
     }
