@@ -1,9 +1,6 @@
 const Discord = require('discord.js');
 const axios = require('axios');
-
-// Get arguments
-let arguments = process.argv.slice(2);
-console.log(arguments);
+const inputParsers = require('./inputParser');
 
 // create a new Discord client
 const client = new Discord.Client();
@@ -28,12 +25,12 @@ client.on('message', message => {
 
         let messageContent = message.content;
 
-        messageContent = removePrefix(messageContent);
+        messageContent = inputParsers.removePrefix(messageContent);
 
-        let options = parseOptions(messageContent);
+        let options = inputParsers.parseOptions(messageContent);
         messageContent = options.newMessageContent;
 
-        let users = parseUsers(messageContent);
+        let users = inputParsers.parseUsers(messageContent);
 
         let validNoOfUsers = [1, 2, 3, 4, 5]
 
@@ -57,125 +54,6 @@ client.on('message', message => {
 
     }
 });
-
-/*
-* Removes the prefix !wr or !winrate from the string.
-* */
-let removePrefix = (messageContent) => {
-
-    let endOfPrefix = messageContent.indexOf(' ');
-    let newMessageContent = messageContent.slice(endOfPrefix + 1, messageContent.length);
-
-    console.log(newMessageContent);
-
-    return newMessageContent;
-}
-
-let parseNumber = (text) => {
-
-    let number = -1;
-
-    if (/^[-+]?(\d+|Infinity)$/.test(text)) {
-        number = Number(text)
-    }
-
-    return number;
-}
-
-let parseOptions = (messageContent) => {
-
-    let options = {};
-
-    let messageContentSplit = messageContent.split(' ');
-    let i = 0;
-    let shouldExit = false;
-    while (!shouldExit) {
-        if (messageContentSplit[i].startsWith("--")) {
-            switch (messageContentSplit[i].replace('--', '')) {
-                case "type":
-                    options.type = messageContentSplit[i + 1];
-                    break;
-                case "matches":
-                    options.matches = parseNumber(messageContentSplit[i + 1]);
-                    break;
-                case "fromdaysago":
-                    options.daysago = parseNumber(messageContentSplit[i + 1])
-                    break;
-            }
-            i += 2;
-        } else {
-            shouldExit = true;
-        }
-    }
-    let newMessageContent;
-
-    if (i != 0){
-        // Starts at the end of the final parameter + 1 space
-        //console.log(messageContent.indexOf(messageContentSplit[i-2] + " " + messageContentSplit[i-1]));
-        //let indexUsersStartAt = messageContent.indexOf(messageContentSplit[i-2] + " " + messageContentSplit[i-1]) + messageContentSplit[i-2].length + messageContentSplit[i-2].length + 2;
-
-        // For now, just start at the index of what the first username is (include the starting ' ')
-        let indexUsersStartAt = messageContent.indexOf(messageContentSplit[i]);
-        newMessageContent = messageContent.slice(indexUsersStartAt - 1, messageContent.length)
-    } else{
-        newMessageContent = messageContent;
-    }
-
-    options.newMessageContent = newMessageContent;
-
-    console.log("Here are the options: ");
-    console.log(options);
-
-    return options;
-}
-
-
-/*
- *
- *  TODO: Fix infinite loop if end character is a "
- */
-let parseUsers = (messageContent) => {
-    let users = [];
-
-    let i = 0;
-
-    if (messageContent[0] !== ' '){
-        messageContent = " " + messageContent;
-    }
-
-    while (i < messageContent.length && i !== -1){
-        let char = messageContent[i];
-
-        let isSpace = char === ' ';
-        if (isSpace){
-            let nextIsSemicolon = messageContent[i+1] === '"';
-            if (nextIsSemicolon){
-                i = i + 1;
-                let endIndex = messageContent.indexOf('"', i + 1);
-                users.push(messageContent.slice(i+1, endIndex));
-                i = endIndex + 1;
-            }
-            else{
-                let endIndex = messageContent.indexOf(' ', i+1)
-                users.push(messageContent.slice(i+1, endIndex === -1 ? messageContent.length : endIndex))
-                i = endIndex;
-            }
-        }
-        else{
-            if (i == 0){
-                i = -1;
-            } else{
-                i = i + 1;
-            }
-        }
-
-    }
-
-    console.log("Here are the users: ");
-    console.log(users);
-
-    return users;
-}
 
 
 let sendEasterEggAnswer = (message, easterEggMessage) => {
@@ -234,9 +112,11 @@ let sendRealAnswer = (message, users, options) => {
                 parameters.MatchSelector = value;
                 break;
             case "matches":
-                let matchesIsValid = value >= 1 && value <= 60;
+                let matchesIsValid = value >= 1 && value <= 200;
                 if (matchesIsValid){
                     parameters.NoMatches = value;
+                } else{
+                    message.channel.send("Invalid --matches parameter. Please specify a value between 1 and 200");
                 }
                 break;
             case "daysago":
@@ -249,6 +129,9 @@ let sendRealAnswer = (message, users, options) => {
 
     const requestUrl = `https://winrateapi.lucaswinther.info/api/WinRate/GetWinrateTogether/${users.length}`;
 
+    console.log("Params: ")
+    console.log(parameters);
+
     axios.get(requestUrl, {
         params: parameters
     }).then(function (result) {
@@ -257,8 +140,12 @@ let sendRealAnswer = (message, users, options) => {
         console.log("There was a note: ");
         console.log(result.data.note);
 
-        if (result.data?.note === 1){
-            message.channel.send("Unable to fully satisfy the request, please try again later. The message below describes how far we looked.")
+        // We hit API limit.
+        if (result.data?.note === '1'){
+            message.channel.send("Unable to fully satisfy the request, please try again later. The message below describes how far we looked.");
+        }
+        if (result.data?.note === '2'){
+            message.channel.send("Not enough matches played to satisfy the matches parameter");
         }
 
 
@@ -302,6 +189,6 @@ else{
 // login to Discord with your app's token
 client.login(key);
 
-module.exports.removePrefix = (prefix) => removePrefix;
+module.exports.removePrefix = (prefix) => removePrefix(prefix);
 
 
