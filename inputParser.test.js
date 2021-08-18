@@ -95,7 +95,6 @@ test("Parses standard user syntax", () => {
     let output = inputParser.parseUsers(input);
 
     expect(output).toEqual(['StereotypicalCat', 'VPdenmark']);
-
 })
 
 test("Parses user syntax with \"\"", () => {
@@ -110,4 +109,10 @@ test("Parses user syntax startign with \"\"", () => {
     let output = inputParser.parseUsers(input);
 
     expect(output).toEqual(['User Name', 'StereotypicalCat', 'VPdenmark', "TSM MonkeyBoy"]);
+})
+
+test('Throws error if uneven number of "', () => {
+    let input = '"User Name" " "TSM MonkeyBoy"';
+
+    expect(() => inputParser.parseUsers(input)).toThrowError(Error);
 })

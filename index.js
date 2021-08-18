@@ -30,7 +30,13 @@ client.on('message', message => {
         let options = inputParsers.parseOptions(messageContent);
         messageContent = options.newMessageContent;
 
-        let users = inputParsers.parseUsers(messageContent);
+        let users;
+        try {
+            users = inputParsers.parseUsers(messageContent);
+        } catch (e) {
+            message.channel.send('Uneven number of " in specified usernames. Please check your input for errors.');
+            return;
+        }
 
         let validNoOfUsers = [1, 2, 3, 4, 5]
 
@@ -128,6 +134,13 @@ let sendRealAnswer = (message, users, options) => {
     }
 
     const requestUrl = `https://winrateapi.lucaswinther.info/api/WinRate/GetWinrateTogether/${users.length}`;
+
+    /*
+     * Set a standard number of matches to look through, if youre are getting a winrate of just 1 person.
+     */
+    if (parameters.NoMatches === undefined && parameters.user2 === undefined){
+        parameters.NoMatches = 50;
+    }
 
     console.log("Params: ")
     console.log(parameters);

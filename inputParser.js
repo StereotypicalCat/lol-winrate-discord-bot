@@ -73,6 +73,13 @@ let parseOptions = (messageContent) => {
  *  TODO: Fix infinite loop if end character is a "
  */
 let parseUsers = (messageContent) => {
+
+    // Test that input is valid
+    // IF every " isnt closed
+    if ((messageContent.match(/"/g) || []).length % 2 !== 0){
+        throw new Error('Invalid number of \" in users');
+    }
+
     let users = [];
 
     let i = 0;
@@ -97,13 +104,6 @@ let parseUsers = (messageContent) => {
                 let endIndex = messageContent.indexOf(' ', i+1)
                 users.push(messageContent.slice(i+1, endIndex === -1 ? messageContent.length : endIndex))
                 i = endIndex;
-            }
-        }
-        else{
-            if (i == 0){
-                i = -1;
-            } else{
-                i = i + 1;
             }
         }
 
