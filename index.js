@@ -227,22 +227,24 @@ let sendRealAnswer = (message, users, options) => {
     }
 
     // Adds the options
-    switch (options.entries) {
-        case "type":
-            // Bad input is handled on API
-            parameters.MatchSelector = options["type"];
-            break;
-        case "matches":
-            let matchesIsValid = options["matches"] >= 1 || options["matches"] <= 60;
-            if (matchesIsValid){
-                parameters.NoMatches = options["matches"];
-            }
-            break;
-        case "daysago":
-            let daysagoIsValid = options["daysago"] > 0;
-            if ( daysagoIsValid){
-                parameters.NoOfDays = options["daysago"]
-            }
+    for (const [key, value] of Object.entries(options)){
+        switch (key) {
+            case "type":
+                // Bad input is handled on API
+                parameters.MatchSelector = value;
+                break;
+            case "matches":
+                let matchesIsValid = value >= 1 && value <= 60;
+                if (matchesIsValid){
+                    parameters.NoMatches = value;
+                }
+                break;
+            case "daysago":
+                let daysagoIsValid = value > 0;
+                if (daysagoIsValid){
+                    parameters.NoOfDays = value;
+                }
+        }
     }
 
     const requestUrl = `https://winrateapi.lucaswinther.info/api/WinRate/GetWinrateTogether/${users.length}`;
@@ -250,7 +252,16 @@ let sendRealAnswer = (message, users, options) => {
     axios.get(requestUrl, {
         params: parameters
     }).then(function (result) {
+        console.log("Here is the result:")
         console.log(result.data);
+        console.log("There was a note: ");
+        console.log(result.data.note);
+
+        if (result.data?.note === 1){
+            message.channel.send("Unable to fully satisfy the request, please try again later. The message below describes how far we looked.")
+        }
+
+
         let totalGames = result.data.wins + result.data.losses;
 
         if (totalGames === 0){
@@ -264,6 +275,7 @@ let sendRealAnswer = (message, users, options) => {
         else{
             message.channel.send(`The winrate of ${parameters.user1} is ${((result.data.wins/totalGames) * 100).toFixed(2)}% based on their recent ${totalGames} games.`)
         }
+
 
 
 
@@ -290,6 +302,6 @@ else{
 // login to Discord with your app's token
 client.login(key);
 
-
+module.exports.removePrefix = (prefix) => removePrefix;
 
 
