@@ -119,6 +119,9 @@ let parseOptions = (messageContent) => {
 
     options.newMessageContent = newMessageContent;
 
+    console.log("Here are the options: ");
+    console.log(options);
+
     return options;
 }
 
@@ -131,6 +134,10 @@ let parseUsers = (messageContent) => {
     let users = [];
 
     let i = 0;
+
+    if (messageContent[0] !== ' '){
+        messageContent = " " + messageContent;
+    }
 
     while (i < messageContent.length && i !== -1){
         let char = messageContent[i];
@@ -153,7 +160,7 @@ let parseUsers = (messageContent) => {
         else{
             if (i == 0){
                 i = -1;
-            }else{
+            } else{
                 i = i + 1;
             }
         }
