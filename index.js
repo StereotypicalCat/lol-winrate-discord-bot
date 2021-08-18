@@ -52,7 +52,6 @@ client.on('message', message => {
             sendEasterEggAnswer(message, users[0])
         }
         else{
-            return;
             sendRealAnswer(message, users, options);
         }
 
