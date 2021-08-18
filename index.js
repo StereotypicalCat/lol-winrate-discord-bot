@@ -95,8 +95,13 @@ let parseOptions = (messageContent) => {
             switch (messageContentSplit[i].replace('--', '')) {
                 case "type":
                     options.type = messageContentSplit[i + 1];
+                    break;
                 case "matches":
                     options.matches = parseNumber(messageContentSplit[i + 1]);
+                    break;
+                case "fromdaysago":
+                    options.daysago = parseNumber(messageContentSplit[i + 1])
+                    break;
             }
             i += 2;
         } else {
@@ -232,6 +237,12 @@ let sendRealAnswer = (message, users, options) => {
             let matchesIsValid = options["matches"] >= 1 || options["matches"] <= 60;
             if (matchesIsValid){
                 parameters.NoMatches = options["matches"];
+            }
+            break;
+        case "daysago":
+            let daysagoIsValid = options["daysago"] > 0;
+            if ( daysagoIsValid){
+                parameters.NoOfDays = options["daysago"]
             }
     }
 
