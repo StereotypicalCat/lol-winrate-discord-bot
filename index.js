@@ -8,7 +8,13 @@ module.exports.removePrefix = (prefix) => removePrefix(prefix);
 let CLIENT_ID = '776207570482233376';
 let CLIENT_TOKEN = ""
 
-if (process.env.apikey == null){
+let debug_mode = true;
+
+
+if (debug_mode){
+    CLIENT_TOKEN = "Nzc2MjA3NTcwNDgyMjMzMzc2.GhUO6L.bdQ_0EhEaXshsCGv3jMl0IOxZz9xOquMGzGwNE"
+}
+else if (process.env.apikey == null){
     console.log("Please specify an API key in your environment variables.");
     process.exit(1);
 }
@@ -22,9 +28,12 @@ const getWinrateTogetherBuilder = new SlashCommandBuilder()
     .setDescription('Get winrate together')
     .addStringOption(option => option.setName('user1').setDescription('The first user to get winrate with').setRequired(true))
     .addStringOption(option => option.setName('user2').setDescription('The second user of the winrate call').setRequired(false))
-/*    .addStringOption(option => option.setName('user3').setDescription('The second user of the winrate call').required(true))
-    .addStringOption(option => option.setName('user4').setDescription('The second user of the winrate call').required(true))
-    .addStringOption(option => option.setName('user4').setDescription('The second user of the winrate call').required(true))*/
+    .addStringOption(option => option.setName('user3').setDescription('The third user of the winrate call').setRequired(false))
+    .addStringOption(option => option.setName('user4').setDescription('The second user of the winrate call').setRequired(false))
+    .addStringOption(option => option.setName('user5').setDescription('The second user of the winrate call').setRequired(false))
+    .addStringOption(option => option.setName('gametypes').setDescription('The gamemodes to check. Rf = ranked flex Rs = ranked solo/duo A = aram C = custom games').setRequired(false))
+
+
 
 console.log("converting command to json")
 const jsonCommand = getWinrateTogetherBuilder.toJSON();
@@ -66,27 +75,33 @@ client.on('interactionCreate', async interaction => {
         await interaction.reply('Pong!');
     }
     else if (interaction.commandName === 'getwinratetogether'){
-        const result = await getWinrateTogether(interaction.options.getString('user1'), interaction.options.getString('user2'));
+        const result = await getWinrateTogether(interaction.options.getString('user1'), interaction.options.getString('user2'),interaction.options.getString('user3'),interaction.options.getString('user4'),interaction.options.getString('user5'),interaction.options.getString('gametypes'));
 
         console.log("Finished awaiting result.")
         console.log(result);
-        const {wins, losses} = result;
 
+        if (result.error != null){
+            await interaction.reply("There was an error getting the winrate, please try again later.")
+        }
+        else{
+            const {wins, losses} = result;
 
-        console.log(interaction.options.getString('user1'))
-        console.log(interaction.options.getString('user2'))
-        const users = "" + interaction.options.getString('user1') + (interaction.options.getString('user2') == null ? '' : ` and ${interaction.options.getString('user2')}`);
+            console.log(interaction.options.getString('user1'))
+            console.log(interaction.options.getString('user2'))
+            const users = "" + interaction.options.getString('user1') + (interaction.options.getString('user2') == null ? '' : ` and ${interaction.options.getString('user2')}`) + (interaction.options.getString('user3') == null ? '' : ` and ${interaction.options.getString('user3')}`) + (interaction.options.getString('user4') == null ? '' : ` and ${interaction.options.getString('user4')}`) + (interaction.options.getString('user5') == null ? '' : ` and ${interaction.options.getString('user5')}`);
 
-        await interaction.reply(`The winrate of ${users} is ${wins} wins and ${losses} losses which ${((wins/(wins + losses)) * 100).toFixed(2)}%`);
+            await interaction.reply(`The winrate of ${users} is ${wins} wins and ${losses} in ${interaction.options.getString('gametypes') == null ? '' : `in game type ${interaction.options.getString('gamemodes')}`} losses which ${((wins/(wins + losses)) * 100).toFixed(2)}%`);
 
+        }
     }
 });
 
-const getWinrateTogether = async (user1, user2) => {
+
+const getWinrateTogether = async (user1, user2, user3, user4, user5, gametypes) => {
 
     return new Promise(resolve => {
 
-        const requestUrl = `https://winrateapi.lucaswinther.info/api/winrate/SameTeam?TeamMate=${user1}${user2==null ? '' : `&TeamMate=${user2}`}`;
+        const requestUrl = `https://winrateapi.lucaswinther.info/api/winrate/SameTeam?TeamMate=${user1}${user2==null ? '' : `&TeamMate=${user2}`}${user3==null ? '' : `&TeamMate=${user3}`}${user4==null ? '' : `&TeamMate=${user4}`}${user5==null ? '' : `&TeamMate=${user5}`}${gametypes==null ? '' : `&GameTypes=${gametypes}`}`;
 
         axios.get(requestUrl, {
             params: {}
@@ -103,6 +118,9 @@ const getWinrateTogether = async (user1, user2) => {
             //  message.channel.send("A username wasn't found, or there was a server problem, please try again later");
             console.log("There was an error getting the winrate");
             console.log(error);
+
+            resolve({error: "There was an error"})
+
         }).then(function () {
             // always executed
             console.log("request finished")
