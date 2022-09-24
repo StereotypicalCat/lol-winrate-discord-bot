@@ -87,6 +87,8 @@ client.on('interactionCreate', async interaction => {
 
     if (interaction.commandName === 'getwinratetogether'){
         // Make discord wait more than 3 seconds for reply.
+        server_cooldowns.set(interaction.guildId, Date.now() + (interaction.options.getInteger('history') == null ? 10  * cooldownPerMatchRequested : interaction.options.getInteger('history') * cooldownPerMatchRequested));
+
         await interaction.deferReply()
 
         try {
@@ -106,18 +108,13 @@ client.on('interactionCreate', async interaction => {
                 console.log(interaction.options.getString('user2'))
                 const users = "" + interaction.options.getString('user1') + (interaction.options.getString('user2') == null ? '' : ` and ${interaction.options.getString('user2')}`) + (interaction.options.getString('user3') == null ? '' : ` and ${interaction.options.getString('user3')}`) + (interaction.options.getString('user4') == null ? '' : ` and ${interaction.options.getString('user4')}`) + (interaction.options.getString('user5') == null ? '' : ` and ${interaction.options.getString('user5')}`);
 
-                await interaction.editReply(`The winrate of ${users} is ${wins} wins and ${losses} losses${interaction.options.getString('gametypes') == null ? '' : `in game type ${interaction.options.getString('gamemodes')}`} which ${((wins/(wins + losses)) * 100).toFixed(2)}%`);
+                await interaction.editReply(`The winrate of ${users} is ${wins} wins and ${losses} losses ${interaction.options.getString('gametypes') == null ? '' : `in game type ${interaction.options.getString('gametypes')}`} which is ${((wins/(wins + losses)) * 100).toFixed(2)}%`);
 
             }
         } catch (e){
             console.log(e);
             await interaction.editReply("There was an error getting the winrate, please try again later.")
         }
-        finally {
-            server_cooldowns.set(interaction.guildId, Date.now() + (interaction.options.getInteger('history') == null ? 10  * cooldownPerMatchRequested : interaction.options.getInteger('history') * cooldownPerMatchRequested));
-        }
-
-
     }
 });
 
