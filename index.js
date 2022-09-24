@@ -27,6 +27,11 @@ const getWinrateTogetherBuilder = new SlashCommandBuilder()
     .addStringOption(option => option.setName('user4').setDescription('The second user of the winrate call').setRequired(false))
     .addStringOption(option => option.setName('user5').setDescription('The second user of the winrate call').setRequired(false))
     .addStringOption(option => option.setName('gametypes').setDescription('The gamemodes to check. Rf = ranked flex Rs = ranked solo/duo A = aram C = custom games').setRequired(false))
+    .addIntegerOption(option => option.setName('history').setDescription('The number of games to check').setRequired(false).addChoices(
+        { name: 'Recent', value: 10 },
+            { name: 'Last 25', value: 25 },
+            { name: 'Last 50', value: 50 },
+    ));
 
 
 
@@ -70,38 +75,44 @@ client.on('interactionCreate', async interaction => {
         await interaction.reply('Pong!');
     }
     else if (interaction.commandName === 'getwinratetogether'){
-
         // Make discord wait more than 3 seconds for reply.
         await interaction.deferReply()
 
-        const result = await getWinrateTogether(interaction.options.getString('user1'), interaction.options.getString('user2'),interaction.options.getString('user3'),interaction.options.getString('user4'),interaction.options.getString('user5'),interaction.options.getString('gametypes'));
+        try {
+            const result = await getWinrateTogether(interaction.options.getString('user1'), interaction.options.getString('user2'),interaction.options.getString('user3'),interaction.options.getString('user4'),interaction.options.getString('user5'),interaction.options.getString('gametypes'), interaction.options.getInteger('history'));
 
 
-        console.log("Finished awaiting result.")
-        console.log(result);
+            console.log("Finished awaiting result.")
+            console.log(result);
 
-        if (result.error != null){
-            await interaction.reply("There was an error getting the winrate, please try again later.")
+            if (result.error != null){
+                await interaction.editReply("There was an error getting the winrate, please try again later.")
+            }
+            else{
+                const {wins, losses} = result;
+
+                console.log(interaction.options.getString('user1'))
+                console.log(interaction.options.getString('user2'))
+                const users = "" + interaction.options.getString('user1') + (interaction.options.getString('user2') == null ? '' : ` and ${interaction.options.getString('user2')}`) + (interaction.options.getString('user3') == null ? '' : ` and ${interaction.options.getString('user3')}`) + (interaction.options.getString('user4') == null ? '' : ` and ${interaction.options.getString('user4')}`) + (interaction.options.getString('user5') == null ? '' : ` and ${interaction.options.getString('user5')}`);
+
+                await interaction.editReply(`The winrate of ${users} is ${wins} wins and ${losses} losses${interaction.options.getString('gametypes') == null ? '' : `in game type ${interaction.options.getString('gamemodes')}`} which ${((wins/(wins + losses)) * 100).toFixed(2)}%`);
+
+            }
+        } catch (e){
+            console.log(e);
+            await interaction.editReply("There was an error getting the winrate, please try again later.")
         }
-        else{
-            const {wins, losses} = result;
 
-            console.log(interaction.options.getString('user1'))
-            console.log(interaction.options.getString('user2'))
-            const users = "" + interaction.options.getString('user1') + (interaction.options.getString('user2') == null ? '' : ` and ${interaction.options.getString('user2')}`) + (interaction.options.getString('user3') == null ? '' : ` and ${interaction.options.getString('user3')}`) + (interaction.options.getString('user4') == null ? '' : ` and ${interaction.options.getString('user4')}`) + (interaction.options.getString('user5') == null ? '' : ` and ${interaction.options.getString('user5')}`);
 
-            await interaction.reply(`The winrate of ${users} is ${wins} wins and ${losses} losses in ${interaction.options.getString('gametypes') == null ? '' : `in game type ${interaction.options.getString('gamemodes')}`} which ${((wins/(wins + losses)) * 100).toFixed(2)}%`);
-
-        }
     }
 });
 
 
-const getWinrateTogether = async (user1, user2, user3, user4, user5, gametypes) => {
+const getWinrateTogether = async (user1, user2, user3, user4, user5, gametypes, history) => {
 
     return new Promise(resolve => {
 
-        const requestUrl = `https://winrateapi.lucaswinther.info/api/winrate/SameTeam?TeamMate=${user1}${user2==null ? '' : `&TeamMate=${user2}`}${user3==null ? '' : `&TeamMate=${user3}`}${user4==null ? '' : `&TeamMate=${user4}`}${user5==null ? '' : `&TeamMate=${user5}`}${gametypes==null ? '' : `&GameTypes=${gametypes}`}`;
+        const requestUrl = `https://winrateapi.lucaswinther.info/api/winrate/SameTeam?TeamMate=${user1}${user2==null ? '' : `&TeamMate=${user2}`}${user3==null ? '' : `&TeamMate=${user3}`}${user4==null ? '' : `&TeamMate=${user4}`}${user5==null ? '' : `&TeamMate=${user5}`}${gametypes==null ? '' : `&GameTypes=${gametypes}`}${history==null ? '' : `&NoMatches=${history}`}`;
 
         axios.get(requestUrl, {
             params: {}
