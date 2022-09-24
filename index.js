@@ -70,7 +70,12 @@ client.on('interactionCreate', async interaction => {
         await interaction.reply('Pong!');
     }
     else if (interaction.commandName === 'getwinratetogether'){
+
+        // Make discord wait more than 3 seconds for reply.
+        await interaction.deferReply()
+
         const result = await getWinrateTogether(interaction.options.getString('user1'), interaction.options.getString('user2'),interaction.options.getString('user3'),interaction.options.getString('user4'),interaction.options.getString('user5'),interaction.options.getString('gametypes'));
+
 
         console.log("Finished awaiting result.")
         console.log(result);
@@ -85,7 +90,7 @@ client.on('interactionCreate', async interaction => {
             console.log(interaction.options.getString('user2'))
             const users = "" + interaction.options.getString('user1') + (interaction.options.getString('user2') == null ? '' : ` and ${interaction.options.getString('user2')}`) + (interaction.options.getString('user3') == null ? '' : ` and ${interaction.options.getString('user3')}`) + (interaction.options.getString('user4') == null ? '' : ` and ${interaction.options.getString('user4')}`) + (interaction.options.getString('user5') == null ? '' : ` and ${interaction.options.getString('user5')}`);
 
-            await interaction.reply(`The winrate of ${users} is ${wins} wins and ${losses} in ${interaction.options.getString('gametypes') == null ? '' : `in game type ${interaction.options.getString('gamemodes')}`} losses which ${((wins/(wins + losses)) * 100).toFixed(2)}%`);
+            await interaction.reply(`The winrate of ${users} is ${wins} wins and ${losses} losses in ${interaction.options.getString('gametypes') == null ? '' : `in game type ${interaction.options.getString('gamemodes')}`} which ${((wins/(wins + losses)) * 100).toFixed(2)}%`);
 
         }
     }
