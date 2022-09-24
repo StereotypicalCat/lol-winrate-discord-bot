@@ -1,20 +1,15 @@
 
 const { REST, Routes, SlashCommandBuilder } = require('discord.js');
 const axios = require('axios');
-const inputParsers = require('./inputParser');
 
 module.exports.removePrefix = (prefix) => removePrefix(prefix);
 
 let CLIENT_ID = '776207570482233376';
-let CLIENT_TOKEN = ""
+let CLIENT_TOKEN = "";
 
-let debug_mode = true;
+let debug_mode = false;
 
-
-if (debug_mode){
-    CLIENT_TOKEN = "Nzc2MjA3NTcwNDgyMjMzMzc2.GhUO6L.bdQ_0EhEaXshsCGv3jMl0IOxZz9xOquMGzGwNE"
-}
-else if (process.env.apikey == null){
+if (process.env.apikey == null){
     console.log("Please specify an API key in your environment variables.");
     process.exit(1);
 }
