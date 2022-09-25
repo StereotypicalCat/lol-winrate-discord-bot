@@ -133,15 +133,31 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
+let appendIfNotNull = (UrlSearchParamss, nameOfParam, valueOfParam) => {
+    if (valueOfParam != null){
+        UrlSearchParamss.append(nameOfParam, valueOfParam);
+    }
+}
 
 const getWinrateTogether = async (user1, user2, user3, user4, user5, gametypes, history) => {
 
+    let paramsObj = new URLSearchParams();
+
+    appendIfNotNull(paramsObj, "TeamMate", user1);
+    appendIfNotNull(paramsObj, "TeamMate", user2);
+    appendIfNotNull(paramsObj, "TeamMate", user3);
+    appendIfNotNull(paramsObj, "TeamMate", user4);
+    appendIfNotNull(paramsObj, "TeamMate", user5);
+    appendIfNotNull(paramsObj, "GameTypes", gametypes);
+    appendIfNotNull(paramsObj, "history", history);
+
     return new Promise(resolve => {
 
-        const requestUrl = `https://winrateapi.lucaswinther.info/api/winrate/SameTeam?TeamMate=${user1}${user2==null ? '' : `&TeamMate=${user2}`}${user3==null ? '' : `&TeamMate=${user3}`}${user4==null ? '' : `&TeamMate=${user4}`}${user5==null ? '' : `&TeamMate=${user5}`}${gametypes==null ? '' : `&GameTypes=${gametypes}`}${history==null ? '' : `&NoMatches=${history}`}`;
+        //const requestUrl = `?TeamMate=${user1}${user2==null ? '' : `&TeamMate=${user2}`}${user3==null ? '' : `&TeamMate=${user3}`}${user4==null ? '' : `&TeamMate=${user4}`}${user5==null ? '' : `&TeamMate=${user5}`}${gametypes==null ? '' : `&GameTypes=${gametypes}`}${history==null ? '' : `&NoMatches=${history}`}`;
+        const baseUrl = 'https://winrateapi.lucaswinther.info/api/winrate/SameTeam'
 
-        axios.get(requestUrl, {
-            params: {}
+        axios.get(baseUrl, {
+            params: paramsObj
         }).then(function (result) {
 /*            console.log("Here is the result:")
             console.log(result.data);
