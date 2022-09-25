@@ -24,19 +24,34 @@ let server_cooldowns = new Map()
 
 console.log("Building command")
 const getWinrateTogetherBuilder = new SlashCommandBuilder()
-    .setName('getwinratetogether')
-    .setDescription('Get winrate together')
-    .addStringOption(option => option.setName('user1').setDescription('The first user to get winrate with').setRequired(true))
-    .addStringOption(option => option.setName('user2').setDescription('The second user of the winrate call').setRequired(false))
-    .addStringOption(option => option.setName('user3').setDescription('The third user of the winrate call').setRequired(false))
-    .addStringOption(option => option.setName('user4').setDescription('The second user of the winrate call').setRequired(false))
-    .addStringOption(option => option.setName('user5').setDescription('The second user of the winrate call').setRequired(false))
-    .addStringOption(option => option.setName('gametypes').setDescription('The gamemodes to check. Rf = ranked flex Rs = ranked solo/duo A = aram C = custom games').setRequired(false))
-    .addIntegerOption(option => option.setName('history').setDescription('The number of games to check').setRequired(false).addChoices(
-        { name: 'Recent', value: 10 },
-            { name: 'Last 25', value: 25 },
-            { name: 'Last 50', value: 50 },
-    ));
+    .setName('winrate')
+    .setDescription('Gets the winrate')
+    .addSubcommand(subcommand =>
+        subcommand.setName('of_player')
+            .setDescription('Gets the winrate of a player')
+            .addStringOption(option => option.setName('user1').setDescription('The Username of the Player').setRequired(true))
+            .addStringOption(option => option.setName('gametypes').setDescription('The gamemodes to check. Rf = ranked flex Rs = ranked solo/duo A = aram C = custom games').setRequired(false))
+            .addIntegerOption(option => option.setName('history').setDescription('The number of games to check').setRequired(false).addChoices(
+                { name: 'Recent', value: 10 },
+                { name: 'Last 25', value: 25 },
+                { name: 'Last 50', value: 50 },
+            )))
+            .addSubcommand(subcommand =>
+        subcommand.setName('of_teammates')
+            .setDescription('Gets the winrate with up to five teammates')
+            .addStringOption(option => option.setName('user1').setDescription('The first user to get winrate with').setRequired(true))
+            .addStringOption(option => option.setName('user2').setDescription('The second user of the winrate call').setRequired(true))
+            .addStringOption(option => option.setName('user3').setDescription('The third user of the winrate call').setRequired(false))
+            .addStringOption(option => option.setName('user4').setDescription('The second user of the winrate call').setRequired(false))
+            .addStringOption(option => option.setName('user5').setDescription('The second user of the winrate call').setRequired(false))
+            .addStringOption(option => option.setName('gametypes').setDescription('The gamemodes to check. Rf = ranked flex Rs = ranked solo/duo A = aram C = custom games').setRequired(false))
+            .addIntegerOption(option => option.setName('history').setDescription('The number of games to check').setRequired(false).addChoices(
+                { name: 'Recent', value: 10 },
+                { name: 'Last 25', value: 25 },
+                { name: 'Last 50', value: 50 },
+            ))
+    );
+
 
 
 
@@ -85,7 +100,9 @@ client.on('interactionCreate', async interaction => {
         await interaction.reply('Pong!');
     }
 
-    if (interaction.commandName === 'getwinratetogether'){
+    let subcommand = interaction.options.getSubcommand()
+
+    if (subcommand === 'of_player' || subcommand === 'of_teammates'){
         // Make discord wait more than 3 seconds for reply.
         server_cooldowns.set(interaction.guildId, Date.now() + (interaction.options.getInteger('history') == null ? 10  * cooldownPerMatchRequested : interaction.options.getInteger('history') * cooldownPerMatchRequested));
 
@@ -104,8 +121,6 @@ client.on('interactionCreate', async interaction => {
             else{
                 const {wins, losses} = result;
 
-                console.log(interaction.options.getString('user1'))
-                console.log(interaction.options.getString('user2'))
                 const users = "" + interaction.options.getString('user1') + (interaction.options.getString('user2') == null ? '' : ` and ${interaction.options.getString('user2')}`) + (interaction.options.getString('user3') == null ? '' : ` and ${interaction.options.getString('user3')}`) + (interaction.options.getString('user4') == null ? '' : ` and ${interaction.options.getString('user4')}`) + (interaction.options.getString('user5') == null ? '' : ` and ${interaction.options.getString('user5')}`);
 
                 await interaction.editReply(`The winrate of ${users} is ${wins} wins and ${losses} losses ${interaction.options.getString('gametypes') == null ? '' : `in game type ${interaction.options.getString('gametypes')}`}which is ${((wins/(wins + losses)) * 100).toFixed(2)}%`);
@@ -128,10 +143,10 @@ const getWinrateTogether = async (user1, user2, user3, user4, user5, gametypes, 
         axios.get(requestUrl, {
             params: {}
         }).then(function (result) {
-            console.log("Here is the result:")
+/*            console.log("Here is the result:")
             console.log(result.data);
             console.log("There was a note: ");
-            console.log(result.data.note);
+            console.log(result.data.note);*/
 
             resolve({wins: result.data.wins,
                 losses: result.data.losses})
