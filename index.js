@@ -123,7 +123,12 @@ client.on('interactionCreate', async interaction => {
 
                 const users = "" + interaction.options.getString('user1') + (interaction.options.getString('user2') == null ? '' : ` and ${interaction.options.getString('user2')}`) + (interaction.options.getString('user3') == null ? '' : ` and ${interaction.options.getString('user3')}`) + (interaction.options.getString('user4') == null ? '' : ` and ${interaction.options.getString('user4')}`) + (interaction.options.getString('user5') == null ? '' : ` and ${interaction.options.getString('user5')}`);
 
-                await interaction.editReply(`The winrate of ${users} is ${wins} wins and ${losses} losses ${interaction.options.getString('gametypes') == null ? '' : `in game type ${interaction.options.getString('gametypes')}`}which is ${((wins/(wins + losses)) * 100).toFixed(2)}%`);
+                if (wins + losses === 0){
+                    await interaction.editReply(`Could not find the requested winrates. This could be due to there being no games between the players, or having hit an API limit.`);
+                }
+                else{
+                    await interaction.editReply(`The winrate of ${users} is ${wins} wins and ${losses} losses ${interaction.options.getString('gametypes') == null ? '' : `in game type ${interaction.options.getString('gametypes')} `}which is ${((wins/(wins + losses)) * 100).toFixed(2)}%`);
+                }
 
             }
         } catch (e){
