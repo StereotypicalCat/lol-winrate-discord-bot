@@ -208,7 +208,7 @@ const getWinrateTogether = async (user1, user2, user3, user4, user5, gametypes, 
     appendIfNotNull(paramsObj, "TeamMate", user4);
     appendIfNotNull(paramsObj, "TeamMate", user5);
     appendIfNotNull(paramsObj, "GameTypes", gametypes);
-    appendIfNotNull(paramsObj, "history", history);
+    appendIfNotNull(paramsObj, "NoMatches", history);
 
     return new Promise(resolve => {
 
@@ -216,6 +216,8 @@ const getWinrateTogether = async (user1, user2, user3, user4, user5, gametypes, 
         const baseUrl = 'https://winrateapi.lucaswinther.info/api/winrate/SameTeam'
 
         console.log("Sending Request")
+
+        console.log(paramsObj)
 
         axios.get(baseUrl, {
             params: paramsObj
